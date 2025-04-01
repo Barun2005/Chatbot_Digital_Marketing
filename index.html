@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Marketing Assistant</title>
+    <style>
+        :root {
+            --primary-color: #6e48aa;
+            --secondary-color: #9d50bb;
+            --accent-color: #4776E6;
+            --light-bg: #f9f9ff;
+            --dark-text: #2d3436;
+            --light-text: #f5f6fa;
+            --user-bubble: #6e48aa;
+            --bot-bubble: #f1f1f1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--light-bg);
+            background-image: radial-gradient(circle at 10% 20%, rgba(110, 72, 170, 0.1) 0%, rgba(157, 80, 187, 0.1) 90%);
+        }
+        
+        .chat-container {
+            width: 90%;
+            max-width: 900px;
+            height: 85vh;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chat-header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-actions {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .header-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .header-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: var(--dark-text);
+            color: #fff;
+            text-align: center;
+            border-radius: 20px;
+            padding: 12px 20px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.3s, fadeout 0.3s 2.5s;
+        }
+        
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: white;
+            background-image: linear-gradient(to bottom, white 0%, #f9f9ff 100%);
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 75%;
+            position: relative;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .user-message {
+            background-color: var(--user-bubble);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .bot-message {
+            background-color: var(--bot-bubble);
+            color: var(--dark-text);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-actions {
+            position: absolute;
+            right: 10px;
+            bottom: 5px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+        
+        .action-button {
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            color: inherit;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        
+        .user-message .action-button {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .action-button:hover {
+            background: rgba(0, 0, 0, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .user-message .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .chat-input-area {
+            padding: 15px 20px;
+            background-color: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            background-color: #f5f5ff;
+            border-radius: 24px;
+            padding: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.95rem;
+            color: var(--dark-text);
+        }
+        
+        .mic-button {
+            background: transparent;
+            border: none;
+            color: var(--primary-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 8px;
+            transition: all 0.2s;
+        }
+        
+        .mic-button:hover {
+            background: rgba(110, 72, 170, 0.1);
+        }
+        
+        .mic-button.listening {
+            color: white;
+            background-color: #ff4a4a;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .send-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(110, 72, 170, 0.3);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 74, 74, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 74, 74, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 74, 74, 0); }
+        }
+        
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            background-color: white;
+        }
+        
+        .suggestion-chip {
+            background-color: #f5f5ff;
+            color: var(--primary-color);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .suggestion-chip:hover {
+            background-color: #e6e6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 12px 16px;
+            background-color: var(--bot-bubble);
+            border-radius: 18px;
+            margin-bottom: 15px;
+            width: fit-content;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 3px;
+            opacity: 0.4;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation: typing 1s infinite 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation: typing 1s infinite 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation: typing 1s infinite 0.4s;
+        }
+        
+        @keyframes typing {
+            0% { transform: translateY(0px); opacity: 0.4; }
+            50% { transform: translateY(-5px); opacity: 1; }
+            100% { transform: translateY(0px); opacity: 0.4; }
+        }
+        
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(110, 72, 170, 0.3);
+            border-radius: 10px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(110, 72, 170, 0.5);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 90vh;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Digital Marketing Assistant</h2>
+            <div class="header-actions">
+                <button id="restart-button" class="header-button" title="Start new chat">↻</button>
+                <button id="share-button" class="header-button" title="Share chat">↑</button>
+            </div>
+        </div>
+        <div id="toast" class="toast">Conversation copied to clipboard!</div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">
+                Hello! I'm your Digital Marketing Assistant. I can help with SEO, social media, PPC, content marketing, email campaigns, and more. Ask me anything about digital marketing strategies or request a quiz to test your knowledge!
+                <div class="message-actions">
+                    <button class="action-button" title="Listen">🔊</button>
+                    <button class="action-button" title="Copy">📋</button>
+                </div>
+            </div>
+        </div>
+        <div class="suggestion-chips">
+            <div class="suggestion-chip" onclick="sendSuggestion('What are the latest SEO trends?')">SEO Trends</div>
+            <div class="suggestion-chip" onclick="sendSuggestion('How to improve social media engagement?')">Social Media</div>
+            <div class="suggestion-chip" onclick="sendSuggestion('Give me a digital marketing quiz')">Marketing Quiz</div>
+            <div class="suggestion-chip" onclick="sendSuggestion('Best practices for email marketing')">Email Marketing</div>
+        </div>
+        <div class="chat-input-area">
+            <button id="mic-button" class="mic-button" title="Voice input">🎤</button>
+            <div class="input-wrapper">
+                <input type="text" id="user-input" class="chat-input" placeholder="Ask about digital marketing..." autocomplete="off">
+            </div>
+            <button id="send-button" class="send-button" title="Send">→</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const micButton = document.getElementById('mic-button');
+            const shareButton = document.getElementById('share-button');
+            const restartButton = document.getElementById('restart-button');
+            const toast = document.getElementById('toast');
+            
+            // Restart button functionality
+            restartButton.addEventListener('click', function() {
+                // Clear chat messages except the first welcome message
+                while (chatMessages.children.length > 1) {
+                    chatMessages.removeChild(chatMessages.lastChild);
+                }
+                
+                // Clear the session cookie to start fresh
+                document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                
+                // Show toast notification
+                toast.textContent = "Started a new chat!";
+                toast.className = "toast show";
+                setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+                
+                // Reset the input field
+                userInput.value = '';
+                userInput.focus();
+            });
+            
+            // Share button functionality
+            shareButton.addEventListener('click', function() {
+                // Get all messages
+                const messages = chatMessages.querySelectorAll('.message');
+                let conversationText = "Digital Marketing Chat:\n\n";
+                
+                // Format each message
+                messages.forEach(message => {
+                    const isUser = message.classList.contains('user-message');
+                    const prefix = isUser ? "Me: " : "Bot: ";
+                    conversationText += prefix + message.textContent + "\n\n";
+                });
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(conversationText)
+                    .then(() => {
+                        // Show toast notification
+                        toast.className = "toast show";
+                        setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+                        
+                        // Try to use Web Share API if available
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'My Digital Marketing Chat',
+                                text: conversationText
+                            }).catch(err => {
+                                console.log('Error sharing:', err);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+            });
+            
+            // Speech recognition setup
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+                
+                let isListening = false;
+                
+                micButton.addEventListener('click', function() {
+                    if (!isListening) {
+                        // Start listening
+                        recognition.start();
+                        isListening = true;
+                        micButton.classList.add('listening');
+                        userInput.placeholder = "Listening...";
+                    } else {
+                        // Stop listening
+                        recognition.stop();
+                        isListening = false;
+                        micButton.classList.remove('listening');
+                        userInput.placeholder = "Ask about digital marketing...";
+                    }
+                });
+                
+                recognition.onresult = function(event) {
+                    const speechResult = event.results[0][0].transcript;
+                    userInput.value = speechResult;
+                    
+                    // Automatically send the message after speech recognition
+                    if (speechResult.trim()) {
+                        addMessage(speechResult, true);
+                        sendMessage(speechResult);
+                        // Clear the input field after sending the message
+                        userInput.value = '';
+                    }
+                    
+                    // Reset the mic button
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    userInput.placeholder = "Ask about digital marketing...";
+                };
+                
+                recognition.onend = function() {
+                    // Reset the mic button when recognition ends
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    userInput.placeholder = "Ask about digital marketing...";
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error', event.error);
+                    // Reset the mic button on error
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    userInput.placeholder = "Ask about digital marketing...";
+                };
+            } else {
+                // If speech recognition is not supported
+                micButton.style.display = 'none';
+                console.log('Speech recognition not supported');
+            }
+
+            // Function to add a message to the chat
+            function addMessage(message, isUser) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+                
+                // Create message actions
+                const messageActions = document.createElement('div');
+                messageActions.className = 'message-actions';
+                
+                // Check if the message contains HTML table markup
+                if (!isUser && (message.includes('<table') || message.includes('<ul>') || message.includes('<li>'))) {
+                    // Handle HTML content
+                    messageDiv.innerHTML = message;
+                } else {
+                    // Handle plain text with proper line breaks
+                    // Replace asterisks with proper HTML formatting
+                    const formattedMessage = message
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold text
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic text
+                        .replace(/\n/g, '<br>');                           // Line breaks
+                    
+                    messageDiv.innerHTML = formattedMessage;
+                }
+                
+                // Add buttons to messages
+                if (!isUser) {
+                    // Add speech button
+                    const speechButton = document.createElement('button');
+                    speechButton.className = 'action-button';
+                    speechButton.title = 'Listen to this response';
+                    speechButton.innerHTML = '🔊';
+                    speechButton.addEventListener('click', function() {
+                        // Get the text content of the message
+                        const textToSpeak = message.replace(/<[^>]*>/g, ''); // Remove HTML tags
+                        
+                        // Check if already speaking
+                        const isSpeaking = window.speechSynthesis.speaking;
+                        
+                        // Use the Web Speech API for text-to-speech
+                        speakText(textToSpeak);
+                    });
+                    messageActions.appendChild(speechButton);
+                }
+                
+                // Add copy button to all messages
+                const copyButton = document.createElement('button');
+                copyButton.className = 'action-button';
+                copyButton.title = 'Copy to clipboard';
+                copyButton.innerHTML = '📋';
+                copyButton.addEventListener('click', function() {
+                    // Get the text content of the message
+                    const textToCopy = message.replace(/<[^>]*>/g, ''); // Remove HTML tags
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => {
+                            // Show toast notification
+                            toast.textContent = "Message copied to clipboard!";
+                            toast.className = "toast show";
+                            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy text: ', err);
+                        });
+                });
+                messageActions.appendChild(copyButton);
+                
+                messageDiv.appendChild(messageActions);
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to speak text using Web Speech API
+            function speakText(text) {
+                // Check if speaking and toggle behavior
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                    // Show toast notification
+                    toast.textContent = "Speech stopped";
+                    toast.className = "toast show";
+                    setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2000);
+                    return;
+                }
+                
+                // Create a new speech synthesis utterance
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Set properties (optional)
+                utterance.lang = 'en-US';
+                utterance.rate = 1.0;  // Speed: 0.1 to 10
+                utterance.pitch = 1.0; // Pitch: 0 to 2
+                
+                // Speak the text
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // Function to send message to the backend
+            async function sendMessage(message) {
+                try {
+                    // Show typing indicator
+                    const typingIndicator = document.createElement('div');
+                    typingIndicator.className = 'typing-indicator';
+                    typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+                    chatMessages.appendChild(typingIndicator);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message }),
+                        credentials: 'same-origin'  // Include cookies in the request
+                    });
+
+                    // Remove typing indicator
+                    chatMessages.removeChild(typingIndicator);
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    addMessage(data.response, false);
+                    
+                    // If there's a session_id in the response, store it
+                    if (data.session_id) {
+                        document.cookie = `session_id=${data.session_id}; max-age=3600; path=/`;
+                    }
+                } catch (error) {
+                    // Remove typing indicator in case of error
+                    const typingIndicator = document.querySelector('.typing-indicator');
+                    if (typingIndicator) {
+                        chatMessages.removeChild(typingIndicator);
+                    }
+                    
+                    console.error('Error:', error);
+                    addMessage('Sorry, there was an error processing your request.', false);
+                }
+            }
+
+            // Function to handle suggestion chips
+            window.sendSuggestion = function(suggestion) {
+                addMessage(suggestion, true);
+                userInput.value = '';
+                sendMessage(suggestion);
+            };
+
+            // Event listener for send button
+            sendButton.addEventListener('click', function() {
+                const message = userInput.value.trim();
+                if (message) {
+                    addMessage(message, true);
+                    userInput.value = '';
+                    sendMessage(message);
+                }
+            });
+
+            // Event listener for Enter key
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const message = userInput.value.trim();
+                    if (message) {
+                        addMessage(message, true);
+                        userInput.value = '';
+                        sendMessage(message);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
